@@ -111,6 +111,38 @@ server.tool(
     }
 )
 
+// 예시 리소스: 서버 정보
+server.resource(
+    'server://info',
+    'server://info',
+    {
+        name: '서버 정보',
+        description: 'TypeScript MCP Server 보일러플레이트 정보',
+        mimeType: 'application/json'
+    },
+    async () => {
+        const serverInfo = {
+            name: 'typescript-mcp-server',
+            version: '1.0.0',
+            description: 'TypeScript MCP Server 보일러플레이트',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            nodeVersion: process.version,
+            platform: process.platform
+        }
+
+        return {
+            contents: [
+                {
+                    uri: 'server://info',
+                    mimeType: 'application/json',
+                    text: JSON.stringify(serverInfo, null, 2)
+                }
+            ]
+        }
+    }
+)
+
 // 서버 시작
 async function main() {
     const transport = new StdioServerTransport()
