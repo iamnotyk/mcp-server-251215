@@ -39,6 +39,58 @@ server.tool(
     }
 )
 
+// 예시 도구: 계산기
+server.tool(
+    'calculator',
+    {
+        operation: z
+            .enum(['add', 'subtract', 'multiply', 'divide'])
+            .describe('수행할 연산 (add, subtract, multiply, divide)'),
+        a: z.number().describe('첫 번째 숫자'),
+        b: z.number().describe('두 번째 숫자')
+    },
+    async ({ operation, a, b }) => {
+        // 연산 수행
+        let result: number
+        switch (operation) {
+            case 'add':
+                result = a + b
+                break
+            case 'subtract':
+                result = a - b
+                break
+            case 'multiply':
+                result = a * b
+                break
+            case 'divide':
+                if (b === 0) throw new Error('0으로 나눌 수 없습니다')
+                result = a / b
+                break
+            default:
+                throw new Error('지원하지 않는 연산입니다')
+        }
+
+        const operationSymbols = {
+            add: '+',
+            subtract: '-',
+            multiply: '×',
+            divide: '÷'
+        } as const
+
+        const operationSymbol =
+            operationSymbols[operation as keyof typeof operationSymbols]
+
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `${a} ${operationSymbol} ${b} = ${result}`
+                }
+            ]
+        }
+    }
+)
+
 // 서버 시작
 async function main() {
     const transport = new StdioServerTransport()
