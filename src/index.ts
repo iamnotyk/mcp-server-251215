@@ -7,7 +7,9 @@ const server = new McpServer({
     name: 'typescript-mcp-server',
     version: '1.0.0',
     capabilities: {
-        tools: {}
+        tools: {},
+        resources: {},
+        prompts: {}
     }
 })
 
@@ -137,6 +139,28 @@ server.resource(
                     uri: 'server://info',
                     mimeType: 'application/json',
                     text: JSON.stringify(serverInfo, null, 2)
+                }
+            ]
+        }
+    }
+)
+
+// 예시 프롬프트: 코드 리뷰
+server.prompt(
+    'code_review',
+    'Request Code Review',
+    {
+        code: z.string().describe('The code to review')
+    },
+    async ({ code }) => {
+        return {
+            messages: [
+                {
+                    role: 'user',
+                    content: {
+                        type: 'text',
+                        text: `다음 코드를 분석하고 상세한 리뷰를 제공해주세요:\n\n1. 코드 품질 평가\n2. 개선 가능한 부분\n3. 모범 사례 권장사항\n4. 보안 고려사항\n\n리뷰할 코드:\n\n\`\`\`\n${code}\n\`\`\``
+                    }
                 }
             ]
         }
