@@ -91,6 +91,26 @@ server.tool(
     }
 )
 
+// 예시 도구: 시간 조회
+server.tool(
+    'get_time',
+    {
+        timeZone: z.string().describe('시간대')
+    },
+    async ({ timeZone }) => {
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: new Date().toLocaleString('ko-KR', {
+                        timeZone
+                    })
+                }
+            ]
+        }
+    }
+)
+
 // 서버 시작
 async function main() {
     const transport = new StdioServerTransport()
