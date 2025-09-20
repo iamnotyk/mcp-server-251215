@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "YOUR_SERVER_NAME": {
+            "command": "node",
+            "args": ["/ABSOLUTE/PATH/TO/YOUR/PROJECT/build/index.js"]
+        }
+    }
+}
