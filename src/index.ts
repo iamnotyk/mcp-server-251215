@@ -1,6 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
+import { InferenceClient } from '@huggingface/inference'
+import dotenv from 'dotenv'
+dotenv.config()
 
 // 서버 인스턴스 생성
 const server = new McpServer({
@@ -109,6 +112,60 @@ server.tool(
                     })
                 }
             ]
+        }
+    }
+)
+
+// 이미지 생성 도구
+server.tool(
+    'generate_image',
+    {
+        prompt: z.string().describe('이미지 생성을 위한 프롬프트')
+    },
+    async ({ prompt }) => {
+        try {
+            // Hugging Face 토큰 확인
+            if (!process.env.HF_TOKEN) {
+                throw new Error('HF_TOKEN 환경변수가 설정되지 않았습니다')
+            }
+
+            // Hugging Face Inference 클라이언트 생성
+            const client = new InferenceClient(process.env.HF_TOKEN)
+
+            // 이미지 생성 요청
+            const imageBlob = await client.textToImage({
+                provider: 'fal-ai',
+                model: 'black-forest-labs/FLUX.1-schnell',
+                inputs: prompt,
+                parameters: { num_inference_steps: 5 }
+            })
+
+            // Blob을 ArrayBuffer로 변환 후 base64 인코딩
+            const arrayBuffer = await (
+                imageBlob as unknown as Blob
+            ).arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+            const base64Data = buffer.toString('base64')
+
+            return {
+                content: [
+                    {
+                        type: 'image',
+                        data: base64Data,
+                        mimeType: 'image/png'
+                    }
+                ],
+                annotations: {
+                    audience: ['user'],
+                    priority: 0.9
+                }
+            }
+        } catch (error) {
+            throw new Error(
+                `이미지 생성 중 오류가 발생했습니다: ${
+                    error instanceof Error ? error.message : '알 수 없는 오류'
+                }`
+            )
         }
     }
 )

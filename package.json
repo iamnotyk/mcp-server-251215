@@ -17,7 +17,9 @@
     "license": "ISC",
     "description": "",
     "dependencies": {
+        "@huggingface/inference": "^4.8.0",
         "@modelcontextprotocol/sdk": "^1.18.1",
+        "dotenv": "^17.2.2",
         "zod": "^3.25.76"
     },
     "devDependencies": {
