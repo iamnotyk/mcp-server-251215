@@ -239,6 +239,100 @@ server.tool(
     }
 )
 
+// 날씨 정보 도구: Open-Meteo API 사용
+server.tool(
+    'get_weather',
+    {
+        latitude: z.number().min(-90).max(90).describe('위도 (WGS84)'),
+        longitude: z.number().min(-180).max(180).describe('경도 (WGS84)'),
+        timezone: z
+            .string()
+            .optional()
+            .default('auto')
+            .describe('시간대 (기본값: auto - 자동 감지)'),
+        forecast_days: z
+            .number()
+            .min(1)
+            .max(16)
+            .optional()
+            .default(3)
+            .describe('예보 일수 (기본값: 3, 최대: 16)')
+    },
+    async ({ latitude, longitude, timezone, forecast_days }) => {
+        const url = new URL('https://api.open-meteo.com/v1/forecast')
+        url.searchParams.set('latitude', String(latitude))
+        url.searchParams.set('longitude', String(longitude))
+        url.searchParams.set('timezone', timezone)
+        url.searchParams.set('forecast_days', String(forecast_days))
+        url.searchParams.set(
+            'current',
+            'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m'
+        )
+        url.searchParams.set(
+            'daily',
+            'temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code'
+        )
+
+        const response = await fetch(url.toString(), {
+            headers: { 'User-Agent': 'typescript-mcp-server/1.0.0' }
+        })
+
+        if (!response.ok) {
+            throw new Error(`Open-Meteo API 오류: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        if (data.error) {
+            throw new Error(
+                `Open-Meteo API 오류: ${data.reason || '알 수 없는 오류'}`
+            )
+        }
+
+        const formatted = {
+            location: {
+                latitude: data.latitude,
+                longitude: data.longitude,
+                timezone: data.timezone,
+                elevation: data.elevation
+            },
+            current: data.current
+                ? {
+                      temperature: data.current.temperature_2m,
+                      humidity: data.current.relative_humidity_2m,
+                      weather_code: data.current.weather_code,
+                      wind_speed: data.current.wind_speed_10m,
+                      time: data.current.time
+                  }
+                : null,
+            daily: data.daily
+                ? {
+                      time: data.daily.time,
+                      temperature_max: data.daily.temperature_2m_max,
+                      temperature_min: data.daily.temperature_2m_min,
+                      precipitation: data.daily.precipitation_sum,
+                      weather_code: data.daily.weather_code
+                  }
+                : null,
+            units: {
+                temperature: data.current_units?.temperature_2m || '°C',
+                humidity: data.current_units?.relative_humidity_2m || '%',
+                wind_speed: data.current_units?.wind_speed_10m || 'km/h',
+                precipitation: data.daily_units?.precipitation_sum || 'mm'
+            }
+        }
+
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(formatted, null, 2)
+                }
+            ]
+        }
+    }
+)
+
 // 예시 리소스: 서버 정보
 server.resource(
     'server://info',
