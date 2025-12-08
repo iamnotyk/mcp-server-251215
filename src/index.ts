@@ -170,6 +170,75 @@ server.tool(
     }
 )
 
+// 지오코딩 도구: 주소/도시명으로 좌표 검색
+server.tool(
+    'geocode',
+    {
+        query: z.string().describe('검색할 도시 이름 또는 주소'),
+        limit: z
+            .number()
+            .min(1)
+            .max(40)
+            .optional()
+            .default(1)
+            .describe('반환할 결과 수 (기본값: 1, 최대: 40)'),
+        addressdetails: z
+            .boolean()
+            .optional()
+            .default(true)
+            .describe('주소 세부 정보 포함 여부')
+    },
+    async ({ query, limit, addressdetails }) => {
+        const url = new URL('https://nominatim.openstreetmap.org/search')
+        url.searchParams.set('q', query)
+        url.searchParams.set('format', 'jsonv2')
+        url.searchParams.set('limit', String(limit))
+        url.searchParams.set('addressdetails', addressdetails ? '1' : '0')
+
+        const response = await fetch(url.toString(), {
+            headers: {
+                'User-Agent': 'typescript-mcp-server/1.0.0',
+                'Accept-Language': 'ko,en'
+            }
+        })
+
+        if (!response.ok) {
+            throw new Error(`Nominatim API 오류: ${response.status}`)
+        }
+
+        const results = await response.json()
+
+        if (!results || results.length === 0) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `"${query}"에 대한 검색 결과가 없습니다.`
+                    }
+                ]
+            }
+        }
+
+        const formatted = results.map((r: any) => ({
+            name: r.display_name,
+            latitude: parseFloat(r.lat),
+            longitude: parseFloat(r.lon),
+            type: r.type,
+            importance: r.importance,
+            address: r.address
+        }))
+
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(formatted, null, 2)
+                }
+            ]
+        }
+    }
+)
+
 // 예시 리소스: 서버 정보
 server.resource(
     'server://info',
