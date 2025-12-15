@@ -1,28 +1,36 @@
 {
-    "name": "typescript-mcp-server-base",
+    "name": "typescript-mcp-server",
     "version": "1.0.0",
-    "main": "index.js",
     "type": "module",
+    "module": "src/index.ts",
+    "main": "build/index.js",
     "bin": {
         "mcp-server": "./build/index.js"
     },
     "scripts": {
-        "build": "tsc && chmod 755 build/index.js"
+        "build": "npx smithery build",
+        "dev": "npx smithery dev",
+        "build:local": "tsc && chmod 755 build/index.js"
     },
     "files": [
         "build"
     ],
-    "keywords": [],
+    "keywords": [
+        "mcp",
+        "model-context-protocol",
+        "typescript",
+        "smithery"
+    ],
     "author": "",
     "license": "ISC",
-    "description": "",
+    "description": "TypeScript MCP Server with various tools including greeting, calculator, time, weather, geocode, and image generation",
     "dependencies": {
         "@huggingface/inference": "^4.8.0",
         "@modelcontextprotocol/sdk": "^1.18.1",
-        "dotenv": "^17.2.2",
         "zod": "^3.25.76"
     },
     "devDependencies": {
+        "@smithery/cli": "^1.4.6",
         "@types/node": "^24.5.2",
         "typescript": "^5.9.2"
     }
