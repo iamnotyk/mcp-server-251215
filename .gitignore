@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 .vite/
 
 build/
+
+# Cursor IDE files
+.cursor/
